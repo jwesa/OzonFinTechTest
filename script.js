@@ -1,50 +1,68 @@
 const progressBar = document.querySelector(".circular-progress");
-const valueContainer = document.querySelector(".value-container");
-const animateSwitch = document.querySelector("#animated-switch");
 const valueInput = document.querySelector("#value-input");
+const animateSwitch = document.querySelector("#animated-switch");
+const hideSwitch = document.querySelector("#hide-switch");
 
 let progressValue = 0;
 let progressEndValue = 100;
 let toggle = false;
 
-function changeValue(e) {
+function increaseValueByOne() {
+    progressValue++;
     progressBar.style.background = `conic-gradient(
-          #015afb ${e.target.value * 3.6}deg,
-          #eef2f5 ${e.target.value * 3.6}deg
-      )`;
-	progressValue = e.target.value;
-}
-
-//можно написать функцию КОТОРАЯ добавила бы анимацию с 0 процентов, соответсвенно переписать тогл функцию чтобы принимала параметры
-// старт 0 энд 100 
-
-function toggleAnimate() {
-    let progress = setInterval(() => {
-        if (!toggle) {
-            clearInterval(progress);
-        }
-        progressValue++;
-        valueInput.value = progressValue;
-        progressBar.style.background = `conic-gradient(
           #015afb ${progressValue * 3.6}deg,
           #eef2f5 ${progressValue * 3.6}deg
       )`;
-        if (progressValue == progressEndValue && toggle === true) {
+}
+
+function setValue(e, speed) {
+    if (e.target.value.match("^([1-9][0-9]?|100)$")) {
+        if (e.target.value <= progressValue) {
+            progressValue = 0;
+        }
+        const progress = setInterval(() => {
+            increaseValueByOne();
+            if (progressValue == e.target.value) {
+                clearInterval(progress);
+            }
+        }, speed);
+    }
+}
+
+function toggleAnimate(speed) {
+    const progress = setInterval(() => {
+        if (!toggle) {
+            clearInterval(progress);
+        }
+        valueInput.value = progressValue;
+        increaseValueByOne();
+        if (progressValue >= progressEndValue && toggle === true) {
             clearInterval(progress);
             progressValue = 0;
             progressEndValue = 100;
-            valueInput.value = progressValue;
-            progressBar.style.background = `conic-gradient(
-          #015afb ${progressValue * 3.6}deg,
-          #eef2f5 ${progressValue * 3.6}deg)`;
-            toggleAnimate();
+            toggleAnimate(speed);
         }
-    }, 15);
+    }, speed);
 }
 
-animateSwitch.addEventListener("click", toggleAnimate);
-animateSwitch.addEventListener("click", () => {
-    toggle = !toggle;
+function toggleHide() {
+	if (progressBar.className === "circular-progress__hidden") {
+		progressBar.className = "circular-progress";
+		valueInput.disabled = false;
+    } else {
+		progressBar.className = "circular-progress__hidden";
+		valueInput.disabled = true;
+    }
+}
+
+valueInput.addEventListener("change", (event) => {
+	setValue(event, 15);
 });
 
-valueInput.addEventListener("change", changeValue);
+animateSwitch.addEventListener("click", () => {
+    toggle = !toggle;
+    toggleAnimate(15);
+});
+
+hideSwitch.addEventListener("click", toggleHide);
+
